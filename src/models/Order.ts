@@ -17,6 +17,8 @@ const orderSchema = new Schema({
   amount: { type: Number, required: true },
   currency: { type: String, default: "INR" },
   status: { type: String, enum: ["pending", "paid", "failed", "shipped", "delivered"], default: "pending" },
+  trackingNumber: { type: String, trim: true, default: null },
+  courierPartner: { type: String, trim: true, default: null },
   payment: {
     provider: { type: String, default: "razorpay" },
     razorpayOrderId: String,
