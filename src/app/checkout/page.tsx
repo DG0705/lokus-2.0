@@ -1,4 +1,4 @@
-﻿import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
@@ -8,7 +8,8 @@ import { CheckoutClient } from "@/components/checkout/CheckoutClient";
 export default async function CheckoutPage() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id;
-  if (!userId) redirect("/");
+  if (!userId) redirect("/login?callbackUrl=%2Fcheckout");
+
   await connectToDatabase();
   const addresses = await Address.find({ userId }).sort({ isDefault: -1, createdAt: -1 }).lean();
 

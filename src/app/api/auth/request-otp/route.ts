@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { apiError, apiSuccess } from "@/lib/api-response";
 import { assertOtpRequestAllowed, createOtp, OtpRateLimitError } from "@/lib/otp";
 import { sendEmailOtp, sendMobileOtp } from "@/lib/mailer";
+import User from "@/models/User";
 import { requestOtpSchema } from "@/schemas/auth.schema";
 
 function getClientIp(request: Request) {
@@ -24,13 +25,30 @@ export async function POST(request: Request) {
     if (!parsed.success) return apiError(parsed.error.issues[0]?.message ?? "Invalid payload", 422);
 
     await connectToDatabase();
+
+    const identifier = parsed.data.channel === "email" ? parsed.data.identifier.toLowerCase() : parsed.data.identifier;
+    const field = parsed.data.channel === "email" ? { email: identifier } : { mobile: identifier };
+    const existingUser = await User.findOne(field).select("_id").lean();
+
+    if (parsed.data.intent === "signin" && !existingUser) {
+      return apiError(
+        `No account found with that ${parsed.data.channel === "email" ? "email address" : "mobile number"}. Create one instead.`,
+        404,
+        "ACCOUNT_NOT_FOUND",
+      );
+    }
+
+    if (parsed.data.intent === "signup" && existingUser) {
+      return apiError("An account already exists for that contact. Sign in instead.", 409, "ACCOUNT_EXISTS");
+    }
+
     const clientIp = getClientIp(request);
-    await assertOtpRequestAllowed(parsed.data.identifier, parsed.data.channel, clientIp);
+    await assertOtpRequestAllowed(identifier, parsed.data.channel, clientIp);
 
-    const { code } = await createOtp(parsed.data.identifier, parsed.data.channel);
+    const { code } = await createOtp(identifier, parsed.data.channel);
 
-    if (parsed.data.channel === "email") await sendEmailOtp(parsed.data.identifier, code);
-    else await sendMobileOtp(parsed.data.identifier, code);
+    if (parsed.data.channel === "email") await sendEmailOtp(identifier, code);
+    else await sendMobileOtp(identifier, code);
 
     return apiSuccess({ sent: true }, "OTP sent");
   } catch (error) {
