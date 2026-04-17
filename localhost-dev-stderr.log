@@ -1,0 +1,6 @@
+[next-auth][warn][NEXTAUTH_URL] 
+https://next-auth.js.org/warnings#nextauth_url
+[next-auth][warn][NO_SECRET] 
+https://next-auth.js.org/warnings#no_secret
+[next-auth][error][NO_SECRET] 
+https://next-auth.js.org/errors#no_secret

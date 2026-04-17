@@ -1,0 +1,29 @@
+
+> lokus-2-0@0.1.0 dev
+> next dev --hostname 127.0.0.1 --port 3308
+
+  ▲ Next.js 14.2.30
+  - Local:        http://127.0.0.1:3308
+  - Network:      http://127.0.0.1:3308
+
+ ✓ Starting...
+ ✓ Ready in 2.5s
+ ○ Compiling / ...
+ ✓ Compiled / in 3.6s (675 modules)
+ GET / 200 in 3841ms
+ ✓ Compiled in 285ms (321 modules)
+ ○ Compiling /category/[slug] ...
+ ✓ Compiled /category/[slug] in 634ms (699 modules)
+ GET /category/sneakers 200 in 2030ms
+ GET / 200 in 86ms
+ ✓ Compiled /api/auth/[...nextauth] in 502ms (407 modules)
+ ✓ Compiled (721 modules)
+ GET /favicon.ico 200 in 2908ms
+ GET /api/auth/session 200 in 3769ms
+ GET /api/auth/session 200 in 18ms
+ ○ Compiling /src/middleware ...
+ ✓ Compiled /src/middleware in 762ms (174 modules)
+ GET /api/auth/error?error=Configuration 500 in 22ms
+ GET / 200 in 180ms
+ GET /api/auth/session 200 in 27ms
+ GET /api/auth/session 200 in 13ms
