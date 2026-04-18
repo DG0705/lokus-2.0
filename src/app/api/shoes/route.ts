@@ -1,14 +1,18 @@
-﻿import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { apiError, apiSuccess } from "@/lib/api-response";
 import { connectToDatabase } from "@/lib/db";
+import { getCatalogProducts } from "@/lib/shoe-data";
 import Shoe from "@/models/Shoe";
 import { shoeSchema } from "@/schemas/shoe.schema";
 
-export async function GET() {
-  await connectToDatabase();
-  const shoes = await Shoe.find().sort({ createdAt: -1 }).lean();
-  return apiSuccess(shoes);
+export async function GET(request: Request) {
+  try {
+    const shoes = await getCatalogProducts(new URL(request.url).searchParams);
+    return apiSuccess(shoes);
+  } catch (error) {
+    return apiError(error instanceof Error ? error.message : "Failed to load shoes", 500);
+  }
 }
 
 export async function POST(request: Request) {

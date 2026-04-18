@@ -19,7 +19,7 @@ export function Header() {
   const onSearch = (event: FormEvent) => {
     event.preventDefault();
     const q = query.trim();
-    router.push(q ? `/category?q=${encodeURIComponent(q)}` : "/category");
+    router.push(q ? `/category?search=${encodeURIComponent(q)}` : "/category");
   };
 
   return (

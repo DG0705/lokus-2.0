@@ -1,4 +1,5 @@
-﻿import { z } from "zod";
+import { z } from "zod";
+import { SHOE_CATEGORIES } from "@/lib/catalog-discovery";
 
 export const variantSchema = z.object({
   sku: z.string().min(3),
@@ -10,10 +11,11 @@ export const variantSchema = z.object({
 });
 
 export const shoeSchema = z.object({
+  brand: z.string().trim().max(80).optional().default(""),
   name: z.string().min(2),
   slug: z.string().min(2),
   description: z.string().min(10),
-  category: z.enum(["sneakers", "boots", "heels", "sandals", "loafers", "sports"]),
+  category: z.enum(SHOE_CATEGORIES),
   images: z.array(z.string().url()).default([]),
   variants: z.array(variantSchema).min(1),
   featured: z.boolean().optional().default(false),

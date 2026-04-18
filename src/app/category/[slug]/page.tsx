@@ -1,24 +1,28 @@
 import { notFound } from "next/navigation";
 import { CatalogBrowser } from "@/components/catalog/CatalogBrowser";
-import { connectToDatabase } from "@/lib/db";
-import { serializeCatalogProduct } from "@/lib/catalog";
-import Shoe from "@/models/Shoe";
+import { normalizeCategory, type SearchParamsRecord } from "@/lib/catalog-discovery";
+import { getCatalogProducts } from "@/lib/shoe-data";
 
-const categories = ["sneakers", "boots", "heels", "sandals", "loafers", "sports"];
-
-export default async function CategoryPage({ params }: { params: { slug: string } }) {
-  if (!categories.includes(params.slug)) notFound();
+export default async function CategoryPage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams?: SearchParamsRecord;
+}) {
+  const category = normalizeCategory(params.slug);
+  if (!category) notFound();
 
   try {
-    await connectToDatabase();
-    const products = await Shoe.find({ category: params.slug }).sort({ createdAt: -1 }).lean();
+    const products = await getCatalogProducts(searchParams, { category });
 
     return (
       <CatalogBrowser
-        title={params.slug}
+        routeCategory={category}
+        title={category}
         subtitle="Category spotlight"
-        products={products.map((product: any) => serializeCatalogProduct(product))}
-        emptyMessage={`No ${params.slug} shoes are available with the current filters.`}
+        products={products}
+        emptyMessage={`No ${category} shoes are available with the current filters.`}
       />
     );
   } catch (error) {

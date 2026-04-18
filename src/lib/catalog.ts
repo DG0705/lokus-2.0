@@ -10,6 +10,7 @@ export type CatalogVariant = {
 
 export type CatalogProduct = {
   id: string;
+  brand: string;
   name: string;
   slug: string;
   description: string;
@@ -24,6 +25,7 @@ export type CatalogProduct = {
 export function serializeCatalogProduct(product: any): CatalogProduct {
   return {
     id: product._id.toString(),
+    brand: product.brand ?? "",
     name: product.name ?? "",
     slug: product.slug ?? "",
     description: product.description ?? "",
