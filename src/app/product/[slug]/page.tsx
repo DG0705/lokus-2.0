@@ -1,8 +1,59 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { connectToDatabase } from "@/lib/db";
 import Shoe from "@/models/Shoe";
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  try {
+    await connectToDatabase();
+    const product = await Shoe.findOne({ slug: params.slug }).lean();
+    
+    if (!product) {
+      return {
+        title: "Product Not Found | Lokus",
+        description: "The requested product could not be found.",
+      };
+    }
+
+    const productData = product as any;
+    const title = `${productData.name || 'Product'} | Lokus`;
+    const description = productData.description?.slice(0, 160) || "Premium footwear from Lokus";
+    
+    // Get the first image for Open Graph
+    const ogImage = productData.images?.[0] || "/shoe-placeholder.svg";
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        images: [
+          {
+            url: ogImage,
+            width: 1200,
+            height: 630,
+            alt: productData.name || 'Product',
+          },
+        ],
+        type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: [ogImage],
+      },
+    };
+  } catch {
+    return {
+      title: "Product | Lokus",
+      description: "Premium footwear from Lokus",
+    };
+  }
+}
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   let product: any;
