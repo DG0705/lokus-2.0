@@ -1,35 +1,41 @@
-﻿import Link from "next/link";
+﻿import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/db";
 import Shoe from "@/models/Shoe";
+import AdminShoesClient from "./AdminShoesClient";
 
 export default async function AdminShoesPage() {
+  const session = await getServerSession(authOptions);
+  if ((session?.user as any)?.role !== "admin") redirect("/");
+
   try {
     await connectToDatabase();
     const shoes = await Shoe.find().sort({ createdAt: -1 }).lean();
 
+    // Transform the data to match the client component interface
+    const transformedShoes = shoes.map((shoe: any) => ({
+      _id: shoe._id.toString(),
+      name: shoe.name,
+      category: shoe.category,
+      soldOut: shoe.soldOut,
+      variants: shoe.variants?.map((variant: any) => ({
+        _id: variant._id?.toString() || `${shoe._id.toString()}-${variant.sku}`,
+        sku: variant.sku,
+        size: variant.size,
+        color: variant.color,
+        stock: variant.stock,
+        price: variant.price,
+        image: variant.image,
+      })) || [],
+    }));
+
+    return <AdminShoesClient initialShoes={transformedShoes} />;
+  } catch (error) {
     return (
-      <div>
-        <div className="mb-5 flex items-center justify-between">
-          <h1 className="text-3xl font-semibold">Manage shoes</h1>
-          <Link href="/admin/shoes/new" className="rounded-full bg-[#2C2B2B] px-4 py-2 text-sm font-semibold text-white">New shoe</Link>
-        </div>
-        <div className="space-y-3">
-          {shoes.map((s: any) => (
-            <div key={s._id.toString()} className="rounded-2xl border border-[#D4C4B7] bg-white p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="font-medium">{s.name}</p>
-                  <p className="text-sm text-[#2C2B2B]/60">{s.category} · {s.variants?.length ?? 0} variants · {s.soldOut ? "Sold out" : "In stock"}</p>
-                </div>
-                <Link className="text-sm font-medium text-[#B58B6B]" href={`/admin/shoes/${s._id.toString()}`}>Edit</Link>
-              </div>
-            </div>
-          ))}
-          {!shoes.length ? <p className="text-sm text-[#2C2B2B]/70">No shoes yet. Create one to start.</p> : null}
-        </div>
+      <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        {error instanceof Error ? error.message : "Failed to load admin shoes"}
       </div>
     );
-  } catch (error) {
-    return <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error instanceof Error ? error.message : "Failed to load admin shoes"}</div>;
   }
 }
