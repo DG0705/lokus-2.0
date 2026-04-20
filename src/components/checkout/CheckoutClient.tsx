@@ -58,23 +58,34 @@ export function CheckoutClient({ addresses }: { addresses: any[] }) {
         description: "Premium Footwear Purchase",
         order_id: createOrderData.data.orderId,
         handler: async function (response: any) {
-          const verifyRes = await fetch("/api/payment/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              addressId: selectedAddressId,
-              cartItems,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            }),
-          });
-          const verifyData = await verifyRes.json();
-          if (!verifyRes.ok) throw new Error(verifyData.message || "Payment verification failed");
-          clearCart();
-          alert("Payment successful. Order placed!");
-          router.push("/account/orders");
-          router.refresh();
+          try {
+            const verifyRes = await fetch("/api/payment/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                addressId: selectedAddressId,
+                cartItems,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            
+            if (!verifyRes.ok) {
+              throw new Error(verifyData.message || "Payment verification failed");
+            }
+            
+            // Only clear cart after successful verification
+            clearCart();
+            alert("Payment successful. Order placed!");
+            router.push("/account/orders");
+            router.refresh();
+          } catch (error) {
+            // On verification failure, redirect to failure page
+            console.error("Payment verification failed:", error);
+            router.push("/checkout/failure");
+          }
         },
         theme: { color: "#B58B6B" },
       };

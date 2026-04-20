@@ -19,7 +19,7 @@ interface Order {
   customer: string;
   customerEmail: string;
   amount: number;
-  status: "pending" | "paid" | "failed" | "shipped" | "delivered";
+  status: "pending" | "paid" | "failed" | "shipped" | "delivered" | "refunded";
   trackingNumber?: string;
   courierPartner?: string;
   items: OrderItem[];
@@ -38,12 +38,14 @@ const statusConfig = {
   failed: { icon: XCircle, color: "text-red-600 bg-red-50 border-red-200", label: "Failed" },
   shipped: { icon: Truck, color: "text-purple-600 bg-purple-50 border-purple-200", label: "Shipped" },
   delivered: { icon: CheckCircle, color: "text-green-600 bg-green-50 border-green-200", label: "Delivered" },
+  refunded: { icon: XCircle, color: "text-orange-600 bg-orange-50 border-orange-200", label: "Refunded" },
 };
 
 export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
   const [savingOrder, setSavingOrder] = useState<string | null>(null);
+  const [refundingOrder, setRefundingOrder] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<{ status: string; trackingNumber: string; courierPartner: string }>({
     status: "",
@@ -98,6 +100,46 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
       setError(err instanceof Error ? err.message : 'Failed to save changes');
     } finally {
       setSavingOrder(null);
+    }
+  };
+
+  const refundOrder = async (orderId: string) => {
+    // Confirmation dialog
+    const confirmed = window.confirm("Are you sure you want to refund this order? This will process a full refund and restore inventory.");
+    if (!confirmed) return;
+
+    setRefundingOrder(orderId);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}/refund`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to process refund');
+      }
+
+      // Update order in state
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order._id === orderId ? { ...order, ...data.data } : order
+        )
+      );
+
+      // Exit edit mode if currently editing
+      if (editingOrder === orderId) {
+        cancelEditing();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process refund');
+    } finally {
+      setRefundingOrder(null);
     }
   };
 
@@ -191,6 +233,7 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
                           <option value="failed">Failed</option>
                           <option value="shipped">Shipped</option>
                           <option value="delivered">Delivered</option>
+                          <option value="refunded">Refunded</option>
                         </select>
                       ) : (
                         <div className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium ${statusColor}`}>
@@ -237,13 +280,26 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
                           </div>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => startEditing(order)}
-                          className="flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
-                        >
-                          <Edit2 className="h-3 w-3" />
-                          Manage
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => startEditing(order)}
+                            className="flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                            Manage
+                          </button>
+                          {/* Show refund button for eligible orders */}
+                          {["paid", "shipped", "delivered"].includes(order.status) && (
+                            <button
+                              onClick={() => refundOrder(order._id)}
+                              disabled={refundingOrder === order._id}
+                              className="flex items-center gap-1 rounded-lg bg-orange-600 px-2 py-1 text-xs font-medium text-white hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <X className="h-3 w-3" />
+                              {refundingOrder === order._id ? 'Refunding...' : 'Refund'}
+                            </button>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>
