@@ -79,7 +79,7 @@ export function CheckoutClient({ addresses }: { addresses: any[] }) {
             // Only clear cart after successful verification
             clearCart();
             alert("Payment successful. Order placed!");
-            router.push("/account/orders");
+            router.push(`/checkout/success/${verifyData.data.orderId}`);
             router.refresh();
           } catch (error) {
             // On verification failure, redirect to failure page

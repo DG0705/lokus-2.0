@@ -46,7 +46,9 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
   const [savingOrder, setSavingOrder] = useState<string | null>(null);
   const [refundingOrder, setRefundingOrder] = useState<string | null>(null);
+  const [quickShippingOrder, setQuickShippingOrder] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState<{ status: string; trackingNumber: string; courierPartner: string }>({
     status: "",
     trackingNumber: "",
@@ -110,6 +112,7 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
 
     setRefundingOrder(orderId);
     setError(null);
+    setSuccess(null);
 
     try {
       const response = await fetch(`/api/admin/orders/${orderId}/refund`, {
@@ -132,6 +135,8 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
         )
       );
 
+      setSuccess("Refund processed successfully and inventory restored");
+
       // Exit edit mode if currently editing
       if (editingOrder === orderId) {
         cancelEditing();
@@ -140,6 +145,49 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
       setError(err instanceof Error ? err.message : 'Failed to process refund');
     } finally {
       setRefundingOrder(null);
+    }
+  };
+
+  const quickShip = async (orderId: string) => {
+    setQuickShippingOrder(orderId);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      // Generate mock tracking number
+      const trackingNumber = `LOK-${Math.floor(10000000 + Math.random() * 90000000)}`;
+      const courierPartner = "Lokus Logistics";
+
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'shipped',
+          trackingNumber,
+          courierPartner,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to ship order');
+      }
+
+      // Update order in state
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order._id === orderId ? { ...order, ...data.data } : order
+        )
+      );
+
+      setSuccess(`Order shipped successfully! Tracking: ${trackingNumber}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to ship order');
+    } finally {
+      setQuickShippingOrder(null);
     }
   };
 
@@ -165,6 +213,15 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />
             {error}
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            {success}
           </div>
         </div>
       )}
@@ -288,6 +345,17 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
                             <Edit2 className="h-3 w-3" />
                             Manage
                           </button>
+                          {/* Show Quick Ship button for paid orders */}
+                          {order.status === "paid" && (
+                            <button
+                              onClick={() => quickShip(order._id)}
+                              disabled={quickShippingOrder === order._id}
+                              className="flex items-center gap-1 rounded-lg bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Truck className="h-3 w-3" />
+                              {quickShippingOrder === order._id ? 'Shipping...' : 'Quick Ship'}
+                            </button>
+                          )}
                           {/* Show refund button for eligible orders */}
                           {["paid", "shipped", "delivered"].includes(order.status) && (
                             <button
