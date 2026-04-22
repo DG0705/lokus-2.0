@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/common/Header";
 import { Footer } from "@/components/common/Footer";
 import { Providers } from "@/app/providers";
+import WhatsAppWidget from "@/components/common/WhatsAppWidget";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
           <main className="mx-auto min-h-screen max-w-7xl px-6 py-10">{children}</main>
           <Footer />
+          <WhatsAppWidget />
         </Providers>
       </body>
     </html>

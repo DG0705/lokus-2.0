@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { apiError, apiSuccess } from "@/lib/api-response";
 import { connectToDatabase } from "@/lib/db";
 import Order from "@/models/Order";
+import { sendShippingNotificationEmail } from "@/lib/mailer";
+import mongoose from "mongoose";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -42,6 +44,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return apiError("Order not found", 404);
     }
 
+    // Store the previous status to check for changes
+    const previousStatus = order.status;
+
     // Validate status transitions
     const validStatuses = ["pending", "paid", "failed", "shipped", "delivered"];
     if (status && !validStatuses.includes(status)) {
@@ -54,6 +59,31 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (courierPartner !== undefined) order.courierPartner = courierPartner;
 
     await order.save();
+
+    // Check if status changed to "shipped" and send notification
+    if (previousStatus !== "shipped" && order.status === "shipped" && order.trackingNumber && order.courierPartner) {
+      try {
+        // Fetch user details for email
+        const User = mongoose.models.User;
+        const user = await User.findById(order.userId).select('name email');
+        
+        if (user && user.email) {
+          // Send shipping notification email (non-blocking)
+          sendShippingNotificationEmail(
+            user.email,
+            user.name || 'Customer',
+            order._id.toString(),
+            order.trackingNumber,
+            order.courierPartner
+          ).catch(emailError => {
+            console.error('Failed to send shipping notification email:', emailError);
+          });
+        }
+      } catch (emailError) {
+        console.error('Error preparing shipping notification email:', emailError);
+        // Don't fail the order update if email fails
+      }
+    }
 
     return apiSuccess(order, "Order updated successfully");
   } catch (error) {

@@ -7,6 +7,7 @@ import { connectToDatabase } from "@/lib/db";
 import Order from "@/models/Order";
 import Shoe from "@/models/Shoe";
 import { verifyPaymentSchema } from "@/schemas/payment.schema";
+import { sendOrderConfirmationEmail } from "@/lib/mailer";
 
 type CartItem = {
   shoeId: string;
@@ -159,6 +160,36 @@ export async function POST(request: Request) {
         { session: dbSession },
       );
       savedOrderId = created[0]._id.toString();
+
+      // Send order confirmation email (non-blocking)
+      try {
+        // Fetch user details for email
+        const User = mongoose.models.User;
+        const user = await User.findById(userId).select('name email').session(dbSession);
+        
+        if (user && user.email) {
+          // Send email without awaiting to avoid blocking the response
+          sendOrderConfirmationEmail(
+            user.email,
+            user.name || 'Customer',
+            savedOrderId,
+            orderItems.map(item => ({
+              name: item.name,
+              size: item.size,
+              color: item.color,
+              qty: item.qty,
+              unitPrice: item.unitPrice
+            })),
+            amount,
+            0 // Shipping fee is 0 for now, can be updated later
+          ).catch(emailError => {
+            console.error('Failed to send order confirmation email:', emailError);
+          });
+        }
+      } catch (emailError) {
+        console.error('Error preparing order confirmation email:', emailError);
+        // Don't fail the payment verification if email fails
+      }
     }, {
       readPreference: "primary",
       readConcern: { level: "snapshot" },
