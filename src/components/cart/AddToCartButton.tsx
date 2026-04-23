@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useCart } from "@/hooks/useCart";
+import { Check } from "lucide-react";
 
 export function AddToCartButton({ product }: { product: any }) {
   const [variantId, setVariantId] = useState(product.variants?.[0]?._id?.toString() ?? "");
-  const { addItem, openCart } = useCart();
+  const [isAdded, setIsAdded] = useState(false);
+  const { addItem, openCart, justAddedItems, setJustAdded } = useCart();
 
   const selected = useMemo(
     () => product.variants?.find((v: any) => v._id.toString() === variantId) ?? product.variants?.[0],
@@ -28,6 +30,17 @@ export function AddToCartButton({ product }: { product: any }) {
     });
 
     if (!result.ok) return alert(result.message);
+    
+    // Show visual feedback
+    setIsAdded(true);
+    setJustAdded([...justAddedItems, selected._id.toString()]);
+    
+    // Reset after 2 seconds
+    setTimeout(() => {
+      setIsAdded(false);
+    }, 2000);
+    
+    // Open cart immediately for instant feedback
     openCart();
   };
 
@@ -46,10 +59,19 @@ export function AddToCartButton({ product }: { product: any }) {
       </div>
       <button
         onClick={handleAdd}
-        disabled={selected.stock === 0}
-        className="rounded-full bg-[#2C2B2B] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={selected.stock === 0 || isAdded}
+        className="rounded-full px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 transition-all duration-200 flex items-center justify-center gap-2"
       >
-        {selected.stock > 0 ? "Add to Cart" : "Sold Out"}
+        {isAdded ? (
+          <>
+            <Check className="w-4 h-4" />
+            Added!
+          </>
+        ) : selected.stock > 0 ? (
+          "Add to Cart"
+        ) : (
+          "Sold Out"
+        )}
       </button>
     </div>
   );

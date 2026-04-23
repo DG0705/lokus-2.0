@@ -25,6 +25,10 @@ type CartState = {
   updateQty: (variantId: string, quantity: number) => void;
   clearCart: () => void;
   subtotal: () => number;
+  // Visual feedback states
+  justAddedItems: string[];
+  setJustAdded: (variantIds: string[]) => void;
+  clearJustAdded: () => void;
 };
 
 export const useCart = create<CartState>()(
@@ -49,7 +53,11 @@ export const useCart = create<CartState>()(
           return { ok: true };
         }
 
-        set({ items: [...get().items, item], isOpen: true });
+        set({ 
+          items: [...get().items, item], 
+          isOpen: true,
+          justAddedItems: [...get().justAddedItems, item.variantId]
+        });
         return { ok: true };
       },
       removeItem: (variantId) => set({ items: get().items.filter((i) => i.variantId !== variantId) }),
@@ -59,8 +67,12 @@ export const useCart = create<CartState>()(
             i.variantId === variantId ? { ...i, quantity: Math.max(1, Math.min(quantity, i.availableStock)) } : i,
           ),
         }),
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], justAddedItems: [] }),
       subtotal: () => get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+      // Visual feedback states
+      justAddedItems: [],
+      setJustAdded: (variantIds) => set({ justAddedItems: variantIds }),
+      clearJustAdded: () => set({ justAddedItems: [] }),
     }),
     { name: "lokus-cart" },
   ),
