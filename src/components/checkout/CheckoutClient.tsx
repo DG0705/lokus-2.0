@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/hooks/useCart";
+import { Shield, CheckCircle } from "lucide-react";
 
 declare global {
   interface Window {
@@ -134,6 +135,22 @@ export function CheckoutClient({ addresses }: { addresses: any[] }) {
         >
           {isPaying ? "Processing..." : "Pay with Razorpay"}
         </button>
+
+        {/* Trust Badges */}
+        <div className="mt-6 space-y-3">
+          <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
+            <Shield className="w-4 h-4 text-green-600" />
+            <span>Secured by Razorpay</span>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
+            <CheckCircle className="w-4 h-4 text-blue-600" />
+            <span>100% Authentic Products</span>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
+            <Shield className="w-4 h-4 text-purple-600" />
+            <span>Secure SSL Encryption</span>
+          </div>
+        </div>
       </div>
     </div>
   );

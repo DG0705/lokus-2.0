@@ -1,13 +1,13 @@
 import { z } from "zod";
 
-const emailSchema = z.string().email();
-const phoneSchema = z.string().regex(/^\+?[0-9]{10,15}$/);
+const emailSchema = z.string().email().transform(val => val.toLowerCase().trim());
+const phoneSchema = z.string().regex(/^\+?[0-9]{10,15}$/).trim();
 const nameSchema = z.string().trim().min(2).max(60);
 const intentSchema = z.enum(["signin", "signup"]);
 
 export const requestOtpSchema = z.object({
   channel: z.enum(["email", "mobile"]),
-  identifier: z.string().trim().min(4),
+  identifier: z.string().trim().min(4).transform(val => val.toLowerCase()),
   intent: intentSchema.optional(),
   name: z.string().trim().optional(),
 }).superRefine((value, ctx) => {

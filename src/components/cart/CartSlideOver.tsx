@@ -115,6 +115,14 @@ export function CartSlideOver() {
                 <span className="font-medium">Subtotal</span>
                 <span className="font-semibold">{formatINR(subtotal())}</span>
               </div>
+              
+              {/* Trust Signal Note */}
+              <div className="mb-4 text-center">
+                <p className="text-xs text-gray-500">
+                  Taxes and shipping calculated at checkout
+                </p>
+              </div>
+              
               <Link 
                 href="/checkout" 
                 onClick={closeCart}
