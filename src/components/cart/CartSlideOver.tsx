@@ -6,7 +6,7 @@ import { useCart } from "@/hooks/useCart";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 
 function formatINR(amount: number) {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount / 100);
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
 }
 
 export function CartSlideOver() {

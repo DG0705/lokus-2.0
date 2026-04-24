@@ -126,7 +126,7 @@ export function CheckoutClient({ addresses }: { addresses: any[] }) {
       <div className="h-fit rounded-2xl border border-[#D4C4B7] bg-white p-5">
         <h2 className="text-xl font-semibold">Order summary</h2>
         <p className="mt-2 text-sm text-[#2C2B2B]/70">{items.length} items in cart</p>
-        <p className="mt-4 text-lg font-semibold">Total: ₹{(amount / 100).toLocaleString("en-IN")}</p>
+        <p className="mt-4 text-lg font-semibold">Total: ₹{(amount).toLocaleString("en-IN")}</p>
         <button
           onClick={handlePay}
           disabled={isPaying || !items.length || !addresses.length}

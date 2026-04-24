@@ -27,6 +27,6 @@ export async function POST(request: Request) {
   }
 
   const razorpay = getRazorpayClient();
-  const order = await razorpay.orders.create({ amount, currency: "INR", receipt: `lokus-${Date.now()}` });
+  const order = await razorpay.orders.create({ amount: amount*100, currency: "INR", receipt: `lokus-${Date.now()}` });
   return apiSuccess({ orderId: order.id, amount, currency: "INR", key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID }, "Order created");
 }
