@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ImagePlus, XCircle, Upload } from "lucide-react";
+import { ImagePlus, XCircle, UploadCloud } from "lucide-react";
 import Image from "next/image";
 
 interface ImageSlot {
@@ -12,20 +12,18 @@ interface ImageSlot {
 
 interface ImageUploaderProps {
   images: string[];
-  onChange: (images: string[]) => void;
-  maxImages?: number;
+  onImagesChange: (images: string[]) => void;
 }
 
 const defaultSlots: ImageSlot[] = [
-  { id: "main", label: "Main/Front", url: null },
+  { id: "main", label: "Main", url: null },
   { id: "side", label: "Side", url: null },
   { id: "back", label: "Back", url: null },
   { id: "top", label: "Top", url: null },
   { id: "sole", label: "Sole", url: null },
-  { id: "extra", label: "Extra", url: null },
 ];
 
-export default function ImageUploader({ images, onChange, maxImages = 6 }: ImageUploaderProps) {
+export default function ImageUploader({ images, onImagesChange }: ImageUploaderProps) {
   const [uploading, setUploading] = useState<string | null>(null);
   const [draggedSlot, setDraggedSlot] = useState<string | null>(null);
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
@@ -79,7 +77,7 @@ export default function ImageUploader({ images, onChange, maxImages = 6 }: Image
         const newImages = updatedSlots
           .filter(slot => slot.url)
           .map(slot => slot.url!);
-        onChange(newImages);
+        onImagesChange(newImages);
       } else {
         alert(result.message || "Upload failed");
       }
@@ -120,7 +118,7 @@ export default function ImageUploader({ images, onChange, maxImages = 6 }: Image
     const newImages = updatedSlots
       .filter(slot => slot.url)
       .map(slot => slot.url!);
-    onChange(newImages);
+    onImagesChange(newImages);
   };
 
   const triggerFileInput = (slotId: string) => {
@@ -131,11 +129,11 @@ export default function ImageUploader({ images, onChange, maxImages = 6 }: Image
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900">Product Images</h3>
       <p className="text-sm text-gray-600">
-        Upload images for different views of the product. Maximum {maxImages} images.
+        Upload images for different views of the product. Maximum 5 images.
       </p>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {slots.slice(0, maxImages).map((slot) => (
+        {slots.slice(0, 5).map((slot) => (
           <div
             key={slot.id}
             className={`relative group border-2 border-dashed rounded-lg overflow-hidden transition-all duration-200 ${
@@ -210,7 +208,7 @@ export default function ImageUploader({ images, onChange, maxImages = 6 }: Image
       {/* Upload instructions */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
         <div className="flex items-start gap-2">
-          <Upload className="w-4 h-4 text-blue-600 mt-0.5" />
+          <UploadCloud className="w-4 h-4 text-blue-600 mt-0.5" />
           <div className="text-xs text-blue-800">
             <p className="font-medium mb-1">Upload Instructions:</p>
             <ul className="space-y-1">

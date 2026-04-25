@@ -505,7 +505,7 @@ export default function AdminShoesClient({ initialShoes }: AdminShoesClientProps
                 {/* Images */}
                 <ImageUploader
                   images={editingShoe.images}
-                  onChange={(images) => updateShoeField("images", images)}
+                  onImagesChange={(images) => updateShoeField("images", images)}
                 />
 
                 {/* Variants */}
