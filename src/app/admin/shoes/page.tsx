@@ -17,8 +17,12 @@ export default async function AdminShoesPage() {
     const transformedShoes = shoes.map((shoe: any) => ({
       _id: shoe._id.toString(),
       name: shoe.name,
+      brand: shoe.brand || "",
       category: shoe.category,
+      description: shoe.description || "",
+      images: shoe.images || [],
       soldOut: shoe.soldOut,
+      featured: shoe.featured || false,
       variants: shoe.variants?.map((variant: any) => ({
         _id: variant._id?.toString() || `${shoe._id.toString()}-${variant.sku}`,
         sku: variant.sku,
